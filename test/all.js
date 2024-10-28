@@ -7,17 +7,16 @@ sqlLibLoader(sqlLibType).then((sql)=>{
   var files = fs.readdirSync(__dirname);
   for (var i=0; i<files.length; i++) {
     var file = files[i];
-    var m = /^test_(.+)\.js$/.exec(file);
+    var m = /^test_(.+)\.m?js$/.exec(file);
     if (m !== null) {
       var name = m[1];
       var testModule = require("./" + file);
       if (testModule.test) {
         exports['test ' + name] = testModule.test.bind(null, sql);
       }
-
     }
   }
-  
+
   if (module == require.main) require('test').run(exports);
 })
 .catch((e)=>{
