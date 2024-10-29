@@ -1,13 +1,13 @@
 [
-"cwrap",
-"stackAlloc",
-"stackSave",
-"stackRestore",
-"UTF8ToString",
+  "cwrap",
+  "stackAlloc",
+  "stackSave",
+  "stackRestore",
+  "UTF8ToString",
 
-"allocate",
-"ALLOC_NORMAL",
-"allocateUTF8OnStack",
-"removeFunction",
-"addFunction"
+  "allocate",
+  "ALLOC_NORMAL",
+  "allocateUTF8OnStack",
+  "removeFunction",
+  "addFunction"
 ]
