@@ -1,6 +1,6 @@
 {
   "name": "@emanueleperuffo/sql.js",
-  "version": "1.13.2",
+  "version": "1.14.0",
   "description": "SQLite library with support for opening and writing databases, prepared statements, and more. This SQLite library is in pure javascript (compiled with emscripten).",
   "keywords": [
     "sql",
@@ -24,7 +24,7 @@
     "clean": "make clean",
     "test": "npm run lint && npm run test-asm && npm run test-asm-debug && npm run test-wasm && npm run test-wasm-debug && npm run test-asm-memory-growth",
     "lint": "eslint .",
-    "prettify": "eslint . --fix",
+    "prettify": "prettier src -w",
     "test-asm": "node --unhandled-rejections=strict test/all.js asm",
     "test-asm-debug": "node --unhandled-rejections=strict test/all.js asm-debug",
     "test-asm-memory-growth": "node --unhandled-rejections=strict test/all.js asm-memory-growth",
@@ -51,6 +51,7 @@
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.26.0",
     "jsdoc": "^4.0.2",
+    "prettier": "^3.3.3",
     "puppeteer": "^22.14.0",
     "test": "=0.6.0"
   },
