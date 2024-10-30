@@ -1502,124 +1502,141 @@ Module['onRuntimeInitialized'] = function onRuntimeInitialized() {
   };
 
   Database.prototype['fts5_api'] = function fts5_api() {
-    const ptrBind = new PointerBind('fts5_api_ptr');
+    const getApiPtrFromDb = () => {
+      const ptrBind = new PointerBind('fts5_api_ptr');
 
-    this.run('SELECT fts5(?1)', [ptrBind]);
+      this.run('SELECT fts5(?1)', [ptrBind]);
 
-    const apiPtr = ptrBind.ret;
+      const apiPtr = ptrBind.ret;
 
-    const getVersion = () => getValue(apiPtr, 'i32');
+      return apiPtr;
+    };
 
     return {
-      getVersion,
       createTokenizerV2: (name, tokenize) => {
-        if (getVersion() < 3) {
-          throw new Error(
-            `FTS5 Api version should be at least 3, got ${version}`,
-          );
-        }
+        const stack = stackSave();
 
-        const xCreate = (userData, argsPtr, nArgs, tokenizerPtr) => {
-          // console.log('Inside xCreate');
+        const apiPtr = getApiPtrFromDb();
 
-          return SQLITE_OK;
-        };
+        try {
+          const fts5ApiVersion = getValue(apiPtr, 'i32');
 
-        const xDelete = (tokenizerPtr) => {
-          // console.log('Inside xDelete');
+          if (fts5ApiVersion < 3) {
+            throw new Error(
+              `FTS5 Api version should be at least 3, got ${fts5ApiVersion}`,
+            );
+          }
 
-          removeFunction(xCreateFn);
-          removeFunction(xTokenizeFn);
-          removeFunction(xDeleteFn);
-        };
+          const xCreate = (userData, argsPtr, nArgs, tokenizerPtr) => {
+            // console.log('Inside xCreate');
 
-        const xTokenize = (
-          tokenizerPtr,
-          ctxPtr,
-          flags,
-          textPtr,
-          textSize,
-          localePtr,
-          localeSize,
-          tokenFnPtr,
-        ) => {
-          // console.log('Inside xTokenize');
+            return SQLITE_OK;
+          };
 
-          const FTS5_TOKENIZE_QUERY = 0x0001;
-          const FTS5_TOKENIZE_PREFIX = 0x0002;
-          const FTS5_TOKENIZE_DOCUMENT = 0x0004;
-          const FTS5_TOKENIZE_AUX = 0x0008;
+          const xDelete = (tokenizerPtr) => {
+            // console.log('Inside xDelete');
 
-          const FTS5_TOKEN_COLOCATED = 0x0001; /* Same position as prev. token */
+            removeFunction(xCreateFn);
+            removeFunction(xTokenizeFn);
+            removeFunction(xDeleteFn);
+          };
 
-          const tokenFn = getWasmTableEntry(tokenFnPtr);
-
-          const text = UTF8ToString(textPtr, textSize);
-          const locale = UTF8ToString(localePtr, localeSize);
-
-          tokenize({
-            text,
-            locale,
-            reason:
-              flags === FTS5_TOKENIZE_QUERY
-                ? 'query'
-                : flags === FTS5_TOKENIZE_DOCUMENT
-                  ? 'document'
-                  : flags === FTS5_TOKENIZE_AUX
-                    ? 'auxiliary'
-                    : (flags === FTS5_TOKENIZE_QUERY) | FTS5_TOKENIZE_PREFIX
-                      ? 'query-prefix'
-                      : NULL,
-            addToken: ({ token, colocated, start, end }) => {
-              var tokenBytes = intArrayFromString(token);
-              var tokenPtr = allocate(tokenBytes, ALLOC_STACK);
-
-              const tokenFlags = colocated ? FTS5_TOKEN_COLOCATED : NULL;
-
-              this.handleError(
-                tokenFn(
-                  ctxPtr,
-                  tokenFlags,
-                  tokenPtr,
-                  tokenBytes.length,
-                  start,
-                  end,
-                ),
-              );
-            },
-          });
-
-          return SQLITE_OK;
-        };
-
-        const xCreateFn = addFunction(xCreate, 'ippip');
-        const xDeleteFn = addFunction(xDelete, 'vp');
-        const xTokenizeFn = addFunction(xTokenize, 'ippipipip');
-
-        const tokenizerPtr = stackAlloc(4 * 4);
-        setValue(tokenizerPtr, 2, 'i32');
-        setValue(tokenizerPtr + 4, xCreateFn, 'i32');
-        setValue(tokenizerPtr + 4 * 2, xDeleteFn, 'i32');
-        setValue(tokenizerPtr + 4 * 3, xTokenizeFn, 'i32');
-
-        var nameBytes = intArrayFromString(name);
-        var namePtr = allocate(nameBytes, ALLOC_STACK);
-
-        const userDataPtr = NULL;
-        const destroyPtr = NULL;
-
-        const createTokenizerV2Ptr = getValue(apiPtr + 16, 'i32');
-        const createTokenizerV2Fn = getWasmTableEntry(createTokenizerV2Ptr);
-
-        this.handleError(
-          createTokenizerV2Fn(
-            apiPtr,
-            namePtr,
-            userDataPtr,
+          const xTokenize = (
             tokenizerPtr,
-            destroyPtr,
-          ),
-        );
+            ctxPtr,
+            flags,
+            textPtr,
+            textSize,
+            localePtr,
+            localeSize,
+            tokenFnPtr,
+          ) => {
+            // console.log('Inside xTokenize');
+
+            const FTS5_TOKENIZE_QUERY = 0x0001;
+            const FTS5_TOKENIZE_PREFIX = 0x0002;
+            const FTS5_TOKENIZE_DOCUMENT = 0x0004;
+            const FTS5_TOKENIZE_AUX = 0x0008;
+
+            const FTS5_TOKEN_COLOCATED = 0x0001; /* Same position as prev. token */
+
+            const tokenFn = getWasmTableEntry(tokenFnPtr);
+
+            const text = UTF8ToString(textPtr, textSize);
+            const locale = UTF8ToString(localePtr, localeSize);
+
+            tokenize({
+              text,
+              locale,
+              reason:
+                flags === FTS5_TOKENIZE_QUERY
+                  ? 'query'
+                  : flags === FTS5_TOKENIZE_DOCUMENT
+                    ? 'document'
+                    : flags === FTS5_TOKENIZE_AUX
+                      ? 'auxiliary'
+                      : (flags === FTS5_TOKENIZE_QUERY) | FTS5_TOKENIZE_PREFIX
+                        ? 'query-prefix'
+                        : NULL,
+              addToken: ({ token, colocated, start, end }) => {
+                const stack = stackSave();
+
+                try {
+                  var tokenBytes = intArrayFromString(token);
+                  var tokenPtr = allocate(tokenBytes, ALLOC_STACK);
+
+                  const tokenFlags = colocated ? FTS5_TOKEN_COLOCATED : NULL;
+
+                  this.handleError(
+                    tokenFn(
+                      ctxPtr,
+                      tokenFlags,
+                      tokenPtr,
+                      tokenBytes.length,
+                      start,
+                      end,
+                    ),
+                  );
+                } finally {
+                  stackRestore(stack);
+                }
+              },
+            });
+
+            return SQLITE_OK;
+          };
+
+          const xCreateFn = addFunction(xCreate, 'ippip');
+          const xDeleteFn = addFunction(xDelete, 'vp');
+          const xTokenizeFn = addFunction(xTokenize, 'ippipipip');
+
+          const tokenizerPtr = stackAlloc(4 * 4);
+          setValue(tokenizerPtr, 2, 'i32');
+          setValue(tokenizerPtr + 4, xCreateFn, 'i32');
+          setValue(tokenizerPtr + 4 * 2, xDeleteFn, 'i32');
+          setValue(tokenizerPtr + 4 * 3, xTokenizeFn, 'i32');
+
+          var nameBytes = intArrayFromString(name);
+          var namePtr = allocate(nameBytes, ALLOC_STACK);
+
+          const userDataPtr = NULL;
+          const destroyPtr = NULL;
+
+          const createTokenizerV2Ptr = getValue(apiPtr + 16, 'i32');
+          const createTokenizerV2Fn = getWasmTableEntry(createTokenizerV2Ptr);
+
+          this.handleError(
+            createTokenizerV2Fn(
+              apiPtr,
+              namePtr,
+              userDataPtr,
+              tokenizerPtr,
+              destroyPtr,
+            ),
+          );
+        } finally {
+          stackRestore(stack);
+        }
       },
     };
   };
