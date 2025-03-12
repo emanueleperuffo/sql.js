@@ -1,6 +1,6 @@
 {
   "name": "@emanueleperuffo/sql.js",
-  "version": "1.13.0-manu.2",
+  "version": "1.13.0-manu.3",
   "description": "SQLite library with support for opening and writing databases, prepared statements, and more. This SQLite library is in pure javascript (compiled with emscripten).",
   "keywords": [
     "sql",
@@ -56,14 +56,16 @@
   },
   "exports": {
     ".": {
-      "import": "./dist/sql-wasm.mjs",
-      "default": "./dist/sql-wasm.js"
+      "default": "./dist/sql-web-wasm.mjs"
     },
-    "./web": {
-      "import": "./dist/sql-web-wasm.mjs",
-      "default": "./dist/sql-web-wasm.js"
+    "./sql.wasm": {
+      "default": "./dist/sql-web-wasm.wasm"
     },
-    "./wasm": "./dist/sql-wasm.wasm",
-    "./web/wasm": "./dist/sql-web-wasm.wasm"
+    "./debug": {
+      "default": "./dist/sql-web-wasm-debug.mjs"
+    },
+    "./debug/sql.wasm": {
+      "default": "./dist/sql-web-wasm-debug.wasm"
+    }
   }
 }

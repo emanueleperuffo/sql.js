@@ -75,10 +75,10 @@ EMFLAGS_PRE_JS_FILES = \
 
 EXPORTED_METHODS_JSON_FILES = src/exported_functions.json src/exported_runtime_methods.json
 
-all: optimized debug worker
+all: optimized debug
 
 .PHONY: debug
-debug: dist/sql-wasm-debug.js dist/sql-wasm-debug.mjs dist/sql-web-wasm-debug.js dist/sql-web-wasm-debug.mjs
+debug: dist/sql-web-wasm-debug.mjs
 
 dist/sql-wasm-debug.mjs: $(BITCODE_FILES) $(SOURCE_API_FILES) $(EXPORTED_METHODS_JSON_FILES)
 	$(EMCC) $(EMFLAGS) $(EMFLAGS_DEBUG) $(EMFLAGS_WASM) -s MODULARIZE=1 $(BITCODE_FILES) $(EMFLAGS_PRE_JS_FILES) -o $@
@@ -93,7 +93,7 @@ dist/sql-web-wasm-debug.mjs: $(BITCODE_FILES) $(SOURCE_API_FILES) $(EXPORTED_MET
 	$(EMCC) $(EMFLAGS) $(EMFLAGS_DEBUG) $(EMFLAGS_WASM) $(EMFLAGS_WEB) -s MODULARIZE=1 $(BITCODE_FILES) $(EMFLAGS_PRE_JS_FILES) -o $@
 
 .PHONY: optimized
-optimized: dist/sql-wasm.js dist/sql-wasm.mjs dist/sql-web-wasm.js dist/sql-web-wasm.mjs
+optimized: dist/sql-web-wasm.mjs
 
 dist/sql-wasm.js: $(BITCODE_FILES) $(SOURCE_API_FILES) $(EXPORTED_METHODS_JSON_FILES)
 	$(EMCC) $(EMFLAGS) $(EMFLAGS_OPTIMIZED) $(EMFLAGS_WASM) $(BITCODE_FILES) $(EMFLAGS_PRE_JS_FILES) -o $@
