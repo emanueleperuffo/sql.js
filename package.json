@@ -20,19 +20,20 @@
   "main": "./dist/sql-wasm.js",
   "scripts": {
     "build": "make",
-    "rebuild": "npm run clean && npm run build",
     "clean": "make clean",
-    "test": "npm run lint && npm run test-asm && npm run test-asm-debug && npm run test-wasm && npm run test-wasm-debug && npm run test-asm-memory-growth",
+    "publish-latest": "npm publish --tag latest",
+    "doc": "jsdoc -c .jsdoc.config.json",
     "lint": "eslint .",
     "prettify": "prettier src -w",
-    "test-asm": "node --unhandled-rejections=strict test/all.js asm",
+    "rebuild": "npm run clean && npm run build",
     "test-asm-debug": "node --unhandled-rejections=strict test/all.js asm-debug",
     "test-asm-memory-growth": "node --unhandled-rejections=strict test/all.js asm-memory-growth",
-    "test-wasm": "node --unhandled-rejections=strict test/all.js wasm",
+    "test-asm": "node --unhandled-rejections=strict test/all.js asm",
     "test-wasm-debug": "node --unhandled-rejections=strict test/all.js wasm-debug",
-    "test-web-wasm": "node --unhandled-rejections=strict test/all.js web-wasm",
+    "test-wasm": "node --unhandled-rejections=strict test/all.js wasm",
     "test-web-wasm-debug": "node --unhandled-rejections=strict test/all.js web-wasm-debug",
-    "doc": "jsdoc -c .jsdoc.config.json"
+    "test-web-wasm": "node --unhandled-rejections=strict test/all.js web-wasm",
+    "test": "npm run lint && npm run test-asm && npm run test-asm-debug && npm run test-wasm && npm run test-wasm-debug && npm run test-asm-memory-growth"
   },
   "homepage": "http://github.com/emanueleperuffo/sql.js",
   "repository": {
