@@ -128,7 +128,13 @@ Module['onRuntimeInitialized'] = function onRuntimeInitialized() {
     'number',
     'number',
   ]);
-
+  var sqlite3_bind_pointer = cwrap('sqlite3_bind_pointer', 'number', [
+    'number',
+    'number',
+    'number',
+    'number',
+    'number',
+  ]);
   var sqlite3_bind_parameter_index = cwrap(
     'sqlite3_bind_parameter_index',
     'number',
