@@ -6,9 +6,13 @@
 
 # I got this handy makefile syntax from : https://github.com/mandel59/sqlite-wasm (MIT License) Credited in LICENSE
 # To use another version of Sqlite, visit https://www.sqlite.org/download.html and copy the appropriate values here:
-SQLITE_AMALGAMATION = sqlite-amalgamation-3490100
-SQLITE_AMALGAMATION_ZIP_URL = https://sqlite.org/2025/sqlite-amalgamation-3490100.zip
-SQLITE_AMALGAMATION_ZIP_SHA3 = e7eb4cfb2d95626e782cfa748f534c74482f2c3c93f13ee828b9187ce05b2da7
+SQLITE_AMALGAMATION = sqlite-amalgamation-3510200
+SQLITE_AMALGAMATION_ZIP_URL = https://sqlite.org/2026/sqlite-amalgamation-3510200.zip
+SQLITE_AMALGAMATION_ZIP_SHA3 = 9a9dd4eef7a97809bfacd84a7db5080a5c0eff7aaf1fc1aca20a6dc9a0c26f96
+
+SQLITE_FULL = sqlite-src-3510200
+SQLITE_FULL_ZIP_URL = https://sqlite.org/2026/sqlite-src-3510200.zip
+SQLITE_FULL_ZIP_SHA3 = e436bb919850445ce5168fb033d2d0d5c53a9d8c9602c7fa62b3e0025541d481
 
 # Note that extension-functions.c hasn't been updated since 2010-02-06, so likely doesn't need to be updated
 EXTENSION_FUNCTIONS = extension-functions.c
@@ -66,7 +70,7 @@ EMFLAGS_DEBUG = \
 	-s ASSERTIONS=2 \
 	-O1
 
-BITCODE_FILES = out/sqlite3.o out/extension-functions.o
+BITCODE_FILES = out/sqlite3.o out/regexp.o out/extension-functions.o
 
 SOURCE_API_FILES = src/api.js
 
@@ -122,6 +126,11 @@ out/sqlite3.o: sqlite-src/$(SQLITE_AMALGAMATION)
 	# Generate llvm bitcode
 	$(EMCC) $(SQLITE_COMPILATION_FLAGS) -c sqlite-src/$(SQLITE_AMALGAMATION)/sqlite3.c -o $@
 
+out/regexp.o: sqlite-src/$(SQLITE_AMALGAMATION) sqlite-src/$(SQLITE_AMALGAMATION)/$(SQLITE_FULL)
+	mkdir -p out
+	# Generate llvm bitcode
+	$(EMCC) $(SQLITE_COMPILATION_FLAGS) -Isqlite-src/$(SQLITE_AMALGAMATION) -Isqlite-src/$(SQLITE_AMALGAMATION)/$(SQLITE_FULL)/src -c sqlite-src/$(SQLITE_AMALGAMATION)/$(SQLITE_FULL)/ext/misc/regexp.c -o $@
+
 # Since the extension-functions.c includes other headers in the sqlite_amalgamation, we declare that this depends on more than just extension-functions.c
 out/extension-functions.o: sqlite-src/$(SQLITE_AMALGAMATION)
 	mkdir -p out
@@ -137,15 +146,19 @@ cache/$(SQLITE_AMALGAMATION).zip:
 	mkdir -p cache
 	curl -LsSf '$(SQLITE_AMALGAMATION_ZIP_URL)' -o $@
 
+cache/$(SQLITE_FULL).zip:
+	mkdir -p cache
+	curl -LsSf '$(SQLITE_FULL_ZIP_URL)' -o $@
+
 cache/$(EXTENSION_FUNCTIONS):
 	mkdir -p cache
 	curl -LsSf '$(EXTENSION_FUNCTIONS_URL)' -o $@
 
 ## sqlite-src
 .PHONY: sqlite-src
-sqlite-src: sqlite-src/$(SQLITE_AMALGAMATION) sqlite-src/$(SQLITE_AMALGAMATION)/$(EXTENSION_FUNCTIONS)
+sqlite-src: sqlite-src/$(SQLITE_AMALGAMATION) sqlite-src/$(SQLITE_AMALGAMATION)/$(SQLITE_FULL) sqlite-src/$(SQLITE_AMALGAMATION)/$(EXTENSION_FUNCTIONS)
 
-sqlite-src/$(SQLITE_AMALGAMATION): cache/$(SQLITE_AMALGAMATION).zip sqlite-src/$(SQLITE_AMALGAMATION)/$(EXTENSION_FUNCTIONS)
+sqlite-src/$(SQLITE_AMALGAMATION): cache/$(SQLITE_AMALGAMATION).zip sqlite-src/$(SQLITE_AMALGAMATION)/$(SQLITE_FULL) sqlite-src/$(SQLITE_AMALGAMATION)/$(EXTENSION_FUNCTIONS)
 	mkdir -p sqlite-src/$(SQLITE_AMALGAMATION)
 	echo '$(SQLITE_AMALGAMATION_ZIP_SHA3)  ./cache/$(SQLITE_AMALGAMATION).zip' > cache/check.txt
 	sha3sum -a 256 -c cache/check.txt
@@ -153,6 +166,13 @@ sqlite-src/$(SQLITE_AMALGAMATION): cache/$(SQLITE_AMALGAMATION).zip sqlite-src/$
 	# Also, the extension functions get copied here, and if we get the order of these steps wrong,
 	# this step could remove the extension functions, and that's not what we want
 	unzip -u 'cache/$(SQLITE_AMALGAMATION).zip' -d sqlite-src/
+	touch $@
+
+sqlite-src/$(SQLITE_AMALGAMATION)/$(SQLITE_FULL): cache/$(SQLITE_FULL).zip
+	mkdir -p sqlite-src/$(SQLITE_AMALGAMATION)/$(SQLITE_FULL)
+	echo '$(SQLITE_FULL_ZIP_SHA3)  ./cache/$(SQLITE_FULL).zip' > cache/check.txt
+	sha3sum -a 256 -c cache/check.txt
+	unzip -u 'cache/$(SQLITE_FULL).zip' -d sqlite-src/$(SQLITE_AMALGAMATION)/
 	touch $@
 
 sqlite-src/$(SQLITE_AMALGAMATION)/$(EXTENSION_FUNCTIONS): cache/$(EXTENSION_FUNCTIONS)
