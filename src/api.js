@@ -235,8 +235,12 @@ Module['onRuntimeInitialized'] = function onRuntimeInitialized() {
     'number',
     ['number'],
   );
-
   var sqlite3_update_hook = cwrap('sqlite3_update_hook', 'number', [
+    'number',
+    'number',
+    'number',
+  ]);
+  var sqlite3_regexp_init = cwrap('sqlite3_regexp_init', 'number', [
     'number',
     'number',
     'number',
@@ -858,12 +862,34 @@ Module['onRuntimeInitialized'] = function onRuntimeInitialized() {
     this.handleError(sqlite3_open(this.filename, apiTemp));
     this.db = getValue(apiTemp, 'i32');
     registerExtensionFunctions(this.db);
+    sqlite3_regexp_init(this.db, 0, 0);
     // A list of all prepared statements of the database
     this.statements = {};
     // A list of all user function of the database
     // (created by create_function call)
     this.functions = {};
   }
+
+  Database.prototype['initRegexp'] = function () {
+    var pzErrMsg = _malloc(4);
+    Module.setValue(pzErrMsg, 0, 'i32');
+
+    // Call the function: pApi is 0 for static/internal builds
+    var rc = sqlite3_regexp_init(this.db, pzErrMsg, 0);
+
+    if (rc !== 0) {
+      // Retrieve the error string from the pointer we captured
+      var errPtr = getValue(pzErrMsg, 'i32');
+      var errMsg = UTF8ToString(errPtr);
+      console.error('Regexp Init Error:', errMsg);
+
+      // SQLite expects you to free the error string it allocated
+      _sqlite3_free(errPtr);
+    }
+
+    _free(pzErrMsg);
+    return rc;
+  };
 
   /** Execute an SQL query, ignoring the rows it returns.
     @param {string} sql a string containing some SQL text to execute
