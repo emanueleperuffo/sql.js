@@ -37,7 +37,7 @@
   "homepage": "http://github.com/emanueleperuffo/sql.js",
   "repository": {
     "type": "git",
-    "url": "http://github.com/emanueleperuffo/sql.js.git"
+    "url": "git+ssh://git@github.com/emanueleperuffo/sql.js.git"
   },
   "bugs": {
     "url": "https://github.com/emanueleperuffo/sql.js/issues"
