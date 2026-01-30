@@ -857,7 +857,6 @@ Module['onRuntimeInitialized'] = function onRuntimeInitialized() {
     this.handleError(sqlite3_open(this.filename, apiTemp));
     this.db = getValue(apiTemp, 'i32');
     registerExtensionFunctions(this.db);
-    _sqlite3_regexp_init(this.db, 0, 0);
     // A list of all prepared statements of the database
     this.statements = {};
     // A list of all user function of the database
